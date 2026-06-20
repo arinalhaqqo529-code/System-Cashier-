@@ -7,7 +7,7 @@
 // ================================================================
 //  ▼▼▼ GANTI URL INI setelah deploy Google Apps Script ▼▼▼
 // ================================================================
-const GAS_URL = 'https://script.google.com/u/0/home/projects/1rCqTwASoXofByoPac375cX4HnWIoJnBVO_5R8b0lwQHv05Khiw-DUzcn/edit';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyVnkh38UMac7tzzc2Fke0yYvWdxUhjvsaV3Tmc-WSLK6tzCerqhmW_5C0sIHso8D_o8Q/exec';
 //  Contoh: 'https://script.google.com/macros/s/AKfyc.../exec'
 // ================================================================
 

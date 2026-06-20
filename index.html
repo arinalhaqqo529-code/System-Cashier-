@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kasir ATK & Print-Fotocopy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <div class="logo-icon">🖨️</div>
+      <div class="logo-text">
+        <span class="logo-title">ATK & Print</span>
+        <span class="logo-sub">Kasir Digital</span>
+      </div>
+    </div>
+    <button class="sidebar-close" id="sidebarClose">✕</button>
+  </div>
+  <nav class="sidebar-nav">
+    <a href="#" class="nav-item active" data-page="dashboard">
+      <span class="nav-icon">📊</span><span class="nav-label">Dashboard</span>
+    </a>
+    <a href="#" class="nav-item" data-page="transaksi">
+      <span class="nav-icon">➕</span><span class="nav-label">Input Transaksi</span>
+    </a>
+    <a href="#" class="nav-item" data-page="riwayat">
+      <span class="nav-icon">📋</span><span class="nav-label">Riwayat Transaksi</span>
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-date" id="sidebarDate"></div>
+    <!-- Dark mode toggle -->
+    <div class="dark-toggle-wrap">
+      <span class="dark-toggle-label">Mode Gelap</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+</aside>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay"></div>
+
+<!-- Main Content -->
+<div class="main-wrapper">
+  <header class="topbar">
+    <button class="menu-btn" id="menuBtn">☰</button>
+    <h1 class="page-title" id="pageTitle">Dashboard</h1>
+    <div class="topbar-right">
+      <span class="status-indicator" title="Status koneksi server">
+        <span class="status-dot offline" id="onlineStatus"></span>
+        <span class="status-label" id="onlineLabel">Memuat...</span>
+      </span>
+      <button class="btn-refresh" onclick="manualRefresh()" title="Ambil data terbaru dari server">
+        <span class="refresh-icon">🔄</span><span class="refresh-text">Refresh</span>
+      </button>
+      <span class="topbar-time" id="topbarTime"></span>
+      <!-- Dark mode toggle (topbar, visible on mobile) -->
+      <label class="toggle-switch toggle-topbar">
+        <input type="checkbox" id="darkModeToggle2" onchange="toggleDarkMode(this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </header>
+
+  <main class="content" id="mainContent">
+
+    <!-- ===== DASHBOARD PAGE ===== -->
+    <div class="page active" id="page-dashboard">
+      <div class="stats-grid">
+        <div class="stat-card total">
+          <div class="stat-icon">💰</div>
+          <div class="stat-info">
+            <div class="stat-label">Total Penjualan</div>
+            <div class="stat-value" id="statTotal">Rp 0</div>
+          </div>
+        </div>
+        <div class="stat-card atk">
+          <div class="stat-icon">✏️</div>
+          <div class="stat-info">
+            <div class="stat-label">Penjualan ATK</div>
+            <div class="stat-value" id="statATK">Rp 0</div>
+          </div>
+        </div>
+        <div class="stat-card print">
+          <div class="stat-icon">🖨️</div>
+          <div class="stat-info">
+            <div class="stat-label">Penjualan Print-Fotocopy</div>
+            <div class="stat-value" id="statPrint">Rp 0</div>
+          </div>
+        </div>
+        <div class="stat-card today">
+          <div class="stat-icon">📅</div>
+          <div class="stat-info">
+            <div class="stat-label">Transaksi Hari Ini</div>
+            <div class="stat-value" id="statToday">0</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header"><h3>Penjualan Harian (30 Hari Terakhir)</h3></div>
+          <canvas id="chartHarian" height="200"></canvas>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><h3>Penjualan Bulanan (12 Bulan)</h3></div>
+          <canvas id="chartBulanan" height="200"></canvas>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-header"><h3>Komposisi Transaksi</h3></div>
+          <div class="donut-wrapper"><canvas id="chartDonut" height="220"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-header"><h3>Metode Pembayaran</h3></div>
+          <div class="donut-wrapper"><canvas id="chartPayment" height="220"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Transaksi Terbaru</h3>
+          <a href="#" class="link-btn" data-page="riwayat">Lihat Semua →</a>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table" id="recentTable">
+            <thead>
+              <tr><th>Tanggal</th><th>Jenis</th><th>Layanan</th><th>Jumlah</th><th>Pembayaran</th></tr>
+            </thead>
+            <tbody id="recentBody">
+              <tr><td colspan="5" class="empty-state">Belum ada transaksi</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== INPUT TRANSAKSI PAGE ===== -->
+    <div class="page" id="page-transaksi">
+      <div class="form-card">
+        <div class="form-card-header">
+          <h2>Form Input Transaksi</h2>
+          <span class="trans-no-badge" id="transNoBadge">#001</span>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>No. Transaksi</label>
+            <input type="text" id="fNoTrans" readonly class="input-readonly">
+          </div>
+          <div class="form-group">
+            <label>Tanggal & Waktu</label>
+            <input type="text" id="fDateTime" readonly class="input-readonly">
+          </div>
+          <div class="form-group">
+            <label>Jenis Transaksi <span class="req">*</span></label>
+            <select id="fJenis" onchange="updateLayanan()">
+              <option value="">-- Pilih Jenis --</option>
+              <option value="ATK">ATK</option>
+              <option value="Print-Fotocopy">Print-Fotocopy</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Detail Layanan <span class="req">*</span></label>
+            <select id="fLayanan"><option value="">-- Pilih Layanan --</option></select>
+          </div>
+          <div class="form-group">
+            <label>Jumlah Transaksi (Rp) <span class="req">*</span></label>
+            <div class="input-prefix-wrap">
+              <span class="input-prefix">Rp</span>
+              <input type="text" id="fJumlah" placeholder="0" oninput="formatRupiah(this)">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Metode Pembayaran <span class="req">*</span></label>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="fPayment" value="Cash" checked>
+                <span class="radio-custom"></span> 💵 Cash
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="fPayment" value="Transfer">
+                <span class="radio-custom"></span> 📱 Transfer
+              </label>
+            </div>
+          </div>
+          <div class="form-group full-width">
+            <label>Keterangan</label>
+            <textarea id="fKeterangan" placeholder="Tambahkan catatan (opsional)..." rows="3"></textarea>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-secondary" onclick="resetForm()">🔄 Reset</button>
+          <button class="btn btn-primary" onclick="saveTransaksi()">💾 Simpan</button>
+        </div>
+      </div>
+      <div class="toast" id="toast"></div>
+    </div>
+
+    <!-- ===== RIWAYAT PAGE ===== -->
+    <div class="page" id="page-riwayat">
+
+      <!-- Filter Bar -->
+      <div class="filter-card">
+        <div class="filter-grid">
+          <div class="filter-group">
+            <label>🔍 Cari</label>
+            <input type="text" id="filterSearch" placeholder="Cari transaksi..." oninput="applyFilter()">
+          </div>
+          <div class="filter-group">
+            <label>📅 Tanggal</label>
+            <input type="date" id="filterDate" onchange="applyFilter()">
+          </div>
+          <div class="filter-group">
+            <label>📆 Bulan</label>
+            <input type="month" id="filterMonth" onchange="applyFilter()">
+          </div>
+          <div class="filter-group">
+            <label>🏷️ Jenis</label>
+            <select id="filterJenis" onchange="applyFilter()">
+              <option value="">Semua Jenis</option>
+              <option value="ATK">ATK</option>
+              <option value="Print-Fotocopy">Print-Fotocopy</option>
+            </select>
+          </div>
+          <div class="filter-group filter-actions-group">
+            <label>&nbsp;</label>
+            <button class="btn btn-outline btn-sm" onclick="clearFilter()">Reset Filter</button>
+          </div>
+        </div>
+        <!-- View mode switch -->
+        <div class="view-switch">
+          <span class="view-switch-label">Tampilkan:</span>
+          <button class="view-btn active" id="btnViewToday" onclick="setViewMode('today')">📅 Hari Ini</button>
+          <button class="view-btn" id="btnViewAll" onclick="setViewMode('all')">📋 Semua Data</button>
+        </div>
+      </div>
+
+      <!-- Toolbar: export + bulk delete -->
+      <div class="export-bar">
+        <span class="export-label">Export:</span>
+        <button class="btn btn-success btn-sm" onclick="exportExcel()">📊 Excel</button>
+        <button class="btn btn-danger btn-sm" onclick="exportPDF()">📄 PDF</button>
+        <button class="btn btn-info btn-sm" onclick="printLaporan()">🖨️ Print</button>
+        <div class="bar-spacer"></div>
+        <span class="export-label">Import:</span>
+        <button class="btn btn-purple btn-sm" onclick="document.getElementById('importExcelFile').click()">📥 Import Excel</button>
+        <input type="file" id="importExcelFile" accept=".xlsx,.xls" style="display:none" onchange="importExcel(this)">
+        <button class="btn btn-outline btn-sm" onclick="downloadTemplate()">📋 Template Excel</button>
+        <div class="bar-spacer"></div>
+        <button class="btn btn-danger btn-sm" id="btnBulkDelete" onclick="bulkDelete()" style="display:none">🗑️ Hapus Terpilih (<span id="selectedCount">0</span>)</button>
+      </div>
+
+      <!-- Table -->
+      <div class="card" id="printArea">
+        <div class="print-header" style="display:none">
+          <h2>Laporan Transaksi - Kasir ATK & Print-Fotocopy</h2>
+          <p id="printSubtitle"></p>
+        </div>
+        <div class="table-wrapper">
+          <table class="data-table full-table" id="historyTable">
+            <thead>
+              <tr>
+                <th class="no-print col-check">
+                  <label class="cb-label">
+                    <input type="checkbox" id="checkAll" onchange="toggleCheckAll(this)">
+                    <span class="cb-custom"></span>
+                  </label>
+                </th>
+                <th>No</th>
+                <th>Tanggal</th>
+                <th>Jenis</th>
+                <th>Layanan</th>
+                <th>Jumlah</th>
+                <th>Pembayaran</th>
+                <th>Keterangan</th>
+                <th class="no-print">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody">
+              <tr><td colspan="9" class="empty-state">Belum ada data transaksi</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Rekap -->
+        <div class="rekap-section" id="rekapSection">
+          <h3 class="rekap-title">📊 Rekap Penjualan</h3>
+          <div class="rekap-grid">
+            <div class="rekap-item atk-color">
+              <span class="rekap-label">Total ATK</span>
+              <span class="rekap-value" id="rekapATK">Rp 0</span>
+            </div>
+            <div class="rekap-item print-color">
+              <span class="rekap-label">Total Print-Fotocopy</span>
+              <span class="rekap-value" id="rekapPrint">Rp 0</span>
+            </div>
+            <div class="rekap-item cash-color">
+              <span class="rekap-label">Total Cash</span>
+              <span class="rekap-value" id="rekapCash">Rp 0</span>
+            </div>
+            <div class="rekap-item transfer-color">
+              <span class="rekap-label">Total Transfer</span>
+              <span class="rekap-value" id="rekapTransfer">Rp 0</span>
+            </div>
+            <div class="rekap-item grand-color">
+              <span class="rekap-label">Grand Total</span>
+              <span class="rekap-value grand" id="rekapGrand">Rp 0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>✏️ Edit Transaksi</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Jenis Transaksi</label>
+          <select id="editJenis" onchange="updateEditLayanan()">
+            <option value="ATK">ATK</option>
+            <option value="Print-Fotocopy">Print-Fotocopy</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Detail Layanan</label>
+          <select id="editLayanan"></select>
+        </div>
+        <div class="form-group">
+          <label>Jumlah (Rp)</label>
+          <div class="input-prefix-wrap">
+            <span class="input-prefix">Rp</span>
+            <input type="text" id="editJumlah" oninput="formatRupiah(this)">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Metode Pembayaran</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="editPayment" value="Cash">
+              <span class="radio-custom"></span> 💵 Cash
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="editPayment" value="Transfer">
+              <span class="radio-custom"></span> 📱 Transfer
+            </label>
+          </div>
+        </div>
+        <div class="form-group full-width">
+          <label>Keterangan</label>
+          <textarea id="editKeterangan" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Batal</button>
+      <button class="btn btn-primary" onclick="updateTransaksi()">💾 Simpan Perubahan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="modal-overlay" id="deleteOverlay">
+  <div class="modal modal-sm">
+    <div class="modal-header danger">
+      <h3>⚠️ Hapus Transaksi</h3>
+      <button class="modal-close" onclick="closeDelete()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="deleteConfirmText">Apakah Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat dibatalkan.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeDelete()">Batal</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">🗑️ Hapus</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Preview Modal -->
+<div class="modal-overlay" id="importOverlay">
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <h3>📥 Preview Import Excel</h3>
+      <button class="modal-close" onclick="closeImport()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom:12px;font-size:13px;color:var(--gray-600)" id="importInfo"></p>
+      <div class="table-wrapper" style="max-height:300px;overflow-y:auto">
+        <table class="data-table" id="importPreviewTable">
+          <thead><tr><th>No</th><th>Tanggal</th><th>Jenis</th><th>Layanan</th><th>Jumlah</th><th>Pembayaran</th><th>Keterangan</th><th>Status</th></tr></thead>
+          <tbody id="importPreviewBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeImport()">Batal</button>
+      <button class="btn btn-primary" onclick="confirmImport()" id="btnConfirmImport">✅ Import Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading Overlay (saat sync awal ke Google Sheets) -->
+<div class="loading-overlay" id="loadingOverlay" style="display:none">
+  <div class="loading-box">
+    <div class="loading-spinner"></div>
+    <p>Memuat data dari server...</p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
